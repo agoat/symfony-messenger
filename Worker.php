@@ -68,8 +68,16 @@ class Worker
         while (false === $this->shouldStop) {
             $envelopeHandled = false;
             foreach ($this->receivers as $transportName => $receiver) {
-                $envelopes = $receiver->get();
+                try {
+                    $envelopes = $receiver->get();
+                } catch (MessageDecodingFailedException $exception) {
+                    if (null !== $this->logger) {
+                        $this->logger->warning('Unkown message received. ' . $exception->getMessage());
+                    }
 
+                    break;
+                }
+                
                 foreach ($envelopes as $envelope) {
                     $envelopeHandled = true;
 
